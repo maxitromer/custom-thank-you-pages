@@ -1,9 +1,17 @@
 <?php
 /*
 Plugin Name: Custom Thank You Pages
+Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 1.3
-Author: Maxi
+Version: 1.4
+Author: Maxi Tromer
+Author URI: https://github.com/maxitromer
+Developer: Maxi Tromer
+Developer URI: https://github.com/maxitromer
+GitHub Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
+WC requires at least: 3.0
+WC tested up to: 3.7.1
+Text Domain: custom-thank-you-pages
 */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -44,25 +52,40 @@ class Custom_Thank_You_Pages {
     }
 
     public function ctp_settings_page() {
-        $rules = get_option( 'ctp_rules', array() );
 
-        // Get active products with ID included in the label
-        $products = wc_get_products(array(
-            'status' => 'publish',
-            'limit' => -1
-        ));
 
-        // Get enabled payment gateways
-        $payment_gateways = WC()->payment_gateways->get_available_payment_gateways();
+
+
+
+
+
+
+
+
+        $rules = get_option('ctp_rules', array());
+        $products = wc_get_products(array('limit' => -1));
+        $payment_gateways = WC()->payment_gateways->payment_gateways();
         ?>
 
         <div class="wrap">
             <h1>Custom Thank You Pages Settings</h1>
+            
+            <div class="shortcodes-reference" style="background: #fff; padding: 15px; margin: 20px 0; border: 1px solid #ccd0d4;">
+                <h3>Available Shortcodes</h3>
+                <p>Use these shortcodes in your custom thank you pages:</p>
+                <ul>
+                    <li><code>[custom_thank_you_order]</code> - Displays the order ID</li>
+                    <li><code>[custom_thank_you_customer_information]</code> - Shows customer details (name and email)</li>
+                    <li><code>[custom_thank_you_order_details]</code> - Lists ordered products and quantities</li>
+                </ul>
+            </div>
+
             <form method="post" action="options.php">
-                <?php
-                settings_fields( 'ctp_settings' );
-                do_settings_sections( 'ctp_settings' );
-                ?>
+
+
+
+
+                <?php settings_fields('ctp_settings'); ?>
 
                 <table class="form-table" id="ctp-rules-table">
                     <tr>
