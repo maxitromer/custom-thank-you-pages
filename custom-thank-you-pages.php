@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 1.4
+Version: 0.1
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
