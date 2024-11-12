@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 0.1.1
+Version: 0.1.2
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
@@ -195,19 +195,22 @@ class Custom_Thank_You_Pages {
             }
         }
     }
-
     // Shortcode for order ID
     public function ctp_shortcode_order( $atts ) {
-        $order_id = get_query_var('order-received');
+        global $wp;
+        $order_id = isset($wp->query_vars['order-received']) ? $wp->query_vars['order-received'] : '';
         return $order_id ? 'Order ID: ' . esc_html( $order_id ) : '';
     }
 
     // Shortcode for customer information
     public function ctp_shortcode_customer_information( $atts ) {
-        $order_id = get_query_var('order-received');
+        global $wp;
+        $order_id = isset($wp->query_vars['order-received']) ? $wp->query_vars['order-received'] : '';
         if ( ! $order_id ) return '';
 
         $order = wc_get_order( $order_id );
+        if (!$order) return '';
+
         $customer_info = 'Name: ' . esc_html( $order->get_billing_first_name() ) . ' ' . esc_html( $order->get_billing_last_name() ) . '<br>';
         $customer_info .= 'Email: ' . esc_html( $order->get_billing_email() );
 
@@ -216,10 +219,13 @@ class Custom_Thank_You_Pages {
 
     // Shortcode for order details
     public function ctp_shortcode_order_details( $atts ) {
-        $order_id = get_query_var('order-received');
+        global $wp;
+        $order_id = isset($wp->query_vars['order-received']) ? $wp->query_vars['order-received'] : '';
         if ( ! $order_id ) return '';
 
         $order = wc_get_order( $order_id );
+        if (!$order) return '';
+
         $items = $order->get_items();
         $details = '<ul>';
         foreach ( $items as $item ) {
