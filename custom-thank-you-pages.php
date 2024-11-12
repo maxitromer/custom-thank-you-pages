@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 0.1
+Version: 0.1.1
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
@@ -52,21 +52,11 @@ class Custom_Thank_You_Pages {
     }
 
     public function ctp_settings_page() {
-
-
-
-
-
-
-
-
-
-
         $rules = get_option('ctp_rules', array());
         $products = wc_get_products(array('limit' => -1));
+        $pages = get_pages();
         $payment_gateways = WC()->payment_gateways->payment_gateways();
         ?>
-
         <div class="wrap">
             <h1>Custom Thank You Pages Settings</h1>
             
@@ -79,12 +69,8 @@ class Custom_Thank_You_Pages {
                     <li><code>[custom_thank_you_order_details]</code> - Lists ordered products and quantities</li>
                 </ul>
             </div>
-
+            <h1>Rules</h1>
             <form method="post" action="options.php">
-
-
-
-
                 <?php settings_fields('ctp_settings'); ?>
 
                 <table class="form-table" id="ctp-rules-table">
@@ -118,9 +104,18 @@ class Custom_Thank_You_Pages {
                                     <?php endforeach; ?>
                                 </select>
                             </td>
-                            <td><input type="text" name="ctp_rules[<?php echo $index; ?>][thank_you_url]" value="<?php echo esc_attr( $rule['thank_you_url'] ); ?>" /></td>
-                            <td><input type="number" name="ctp_rules[<?php echo $index; ?>][priority]" value="<?php echo esc_attr( $rule['priority'] ); ?>" /></td>
-                            <td><button type="button" class="button remove-row">Remove</button></td>
+                            <td>
+                              <select name="ctp_rules[<?php echo $index; ?>][thank_you_url]">
+                                  <option value="">Select a Page</option>
+                                  <?php foreach ( $pages as $page ) : ?>
+                                      <option value="<?php echo get_permalink($page->ID); ?>" <?php selected( $rule['thank_you_url'], get_permalink($page->ID) ); ?>>
+                                          <?php echo esc_html( $page->post_title . ' (#' . $page->ID . ')' ); ?>
+                                      </option>
+                                  <?php endforeach; ?>
+                              </select>
+                          </td>
+                          <td><input type="number" name="ctp_rules[<?php echo $index; ?>][priority]" value="<?php echo esc_attr( $rule['priority'] ); ?>" /></td>
+                          <td><button type="button" class="button remove-row">Remove</button></td>
                         </tr>
                     <?php endforeach; ?>
                 </table>
@@ -152,7 +147,14 @@ class Custom_Thank_You_Pages {
                             <?php endforeach; ?>
                         </select>
                     </td>
-                    <td><input type="text" name="ctp_rules[${index}][thank_you_url]" /></td>
+                    <td>
+                        <select name="ctp_rules[${index}][thank_you_url]">
+                            <option value="">Select a Page</option>
+                            <?php foreach ( $pages as $page ) : ?>
+                                <option value="<?php echo get_permalink($page->ID); ?>"><?php echo esc_html( $page->post_title . ' (#' . $page->ID . ')' ); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
                     <td><input type="number" name="ctp_rules[${index}][priority]" /></td>
                     <td><button type="button" class="button remove-row">Remove</button></td>
                 `;
