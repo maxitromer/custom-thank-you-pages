@@ -175,75 +175,74 @@ class Custom_Thank_You_Pages {
         <?php
     }
 
-
     // Shortcode for order ID
-    public function ctp_shortcode_order( $atts ) {
-        // Get order ID from session or URL
+    public function ctp_shortcode_order($atts) {
         $order_id = WC()->session->get('last_order_id');
-        
         if (!$order_id && isset($_GET['order'])) {
-            $order_id = wc_clean($_GET['order']);
+            $order_id = absint($_GET['order']);
         }
-        
         return esc_html($order_id);
     }
 
     public function ctp_shortcode_customer_first_name($atts) {
         $order_id = WC()->session->get('last_order_id');
         if (!$order_id && isset($_GET['order'])) {
-            $order_id = wc_clean($_GET['order']);
+            $order_id = absint($_GET['order']);
         }
         if (!$order_id) return '';
+        
         $order = wc_get_order($order_id);
-        if (!$order) return '';
+        if (!$order instanceof WC_Order) return '';
+        
         return esc_html($order->get_billing_first_name());
     }
 
     public function ctp_shortcode_customer_last_name($atts) {
         $order_id = WC()->session->get('last_order_id');
         if (!$order_id && isset($_GET['order'])) {
-            $order_id = wc_clean($_GET['order']);
+            $order_id = absint($_GET['order']);
         }
         if (!$order_id) return '';
+        
         $order = wc_get_order($order_id);
-        if (!$order) return '';
+        if (!$order instanceof WC_Order) return '';
+        
         return esc_html($order->get_billing_last_name());
     }
 
     public function ctp_shortcode_customer_email($atts) {
         $order_id = WC()->session->get('last_order_id');
         if (!$order_id && isset($_GET['order'])) {
-            $order_id = wc_clean($_GET['order']);
+            $order_id = absint($_GET['order']);
         }
         if (!$order_id) return '';
+        
         $order = wc_get_order($order_id);
-        if (!$order) return '';
+        if (!$order instanceof WC_Order) return '';
+        
         return esc_html($order->get_billing_email());
     }
 
     // Shortcode for order details
-    public function ctp_shortcode_order_details( $atts ) {
+    public function ctp_shortcode_order_details($atts) {
         $order_id = WC()->session->get('last_order_id');
-        
         if (!$order_id && isset($_GET['order'])) {
-            $order_id = wc_clean($_GET['order']);
+            $order_id = absint($_GET['order']);
         }
-        
         if (!$order_id) return '';
-
+        
         $order = wc_get_order($order_id);
-        if (!$order) return '';
-
+        if (!$order instanceof WC_Order) return '';
+        
         $items = $order->get_items();
         $details = '<ul>';
         foreach ($items as $item) {
             $details .= '<li>' . esc_html($item->get_name()) . ' x ' . $item->get_quantity() . '</li>';
         }
         $details .= '</ul>';
-
+        
         return $details;
     }
-
     // Modify your redirect function to include order info
     public function ctp_custom_thank_you_redirect( $order_id ) {
         if ( ! $order_id ) return;
