@@ -10,8 +10,8 @@ Developer: Maxi Tromer
 Developer URI: https://github.com/maxitromer
 GitHub Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Primary Branch: main
-WC requires at least: 3.0
-WC tested up to: 3.7.1
+WC requires at least: 9.0
+WC tested up to: 9.4.1
 Text Domain: custom-thank-you-pages
 */
 
