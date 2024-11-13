@@ -35,7 +35,9 @@ A WordPress plugin that allows you to set custom thank you pages for WooCommerce
 Use these shortcodes in your custom thank you pages:
 
 - `[custom_thank_you_order]` - Displays the order ID
-- `[custom_thank_you_customer_information]` - Shows customer details (name and email)
+- `[custom_thank_you_customer_first_name]` - Shows customer's first name
+- `[custom_thank_you_customer_last_name]` - Shows customer's last name
+- `[custom_thank_you_customer_email]` - Shows customer's email
 - `[custom_thank_you_order_details]` - Lists ordered products and quantities
 
 ## Example Use Cases

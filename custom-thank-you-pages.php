@@ -27,10 +27,13 @@ class Custom_Thank_You_Pages {
 
         // Register custom shortcodes
         add_shortcode( 'custom_thank_you_order', array( $this, 'ctp_shortcode_order' ) );
-        add_shortcode( 'custom_thank_you_customer_information', array( $this, 'ctp_shortcode_customer_information' ) );
         add_shortcode( 'custom_thank_you_order_details', array( $this, 'ctp_shortcode_order_details' ) );
-    }
+        add_shortcode('custom_thank_you_customer_first_name', array($this, 'ctp_shortcode_customer_first_name'));
+        add_shortcode('custom_thank_you_customer_last_name', array($this, 'ctp_shortcode_customer_last_name'));
+        add_shortcode('custom_thank_you_customer_email', array($this, 'ctp_shortcode_customer_email'));
 
+    }    
+    
     public function ctp_add_menu_page() {
         add_submenu_page(
             'woocommerce',
@@ -60,13 +63,14 @@ class Custom_Thank_You_Pages {
         ?>
         <div class="wrap">
             <h1>Custom Thank You Pages Settings</h1>
-            
             <div class="shortcodes-reference" style="background: #fff; padding: 15px; margin: 20px 0; border: 1px solid #ccd0d4;">
                 <h3>Available Shortcodes</h3>
                 <p>Use these shortcodes in your custom thank you pages:</p>
                 <ul>
                     <li><code>[custom_thank_you_order]</code> - Displays the order ID</li>
-                    <li><code>[custom_thank_you_customer_information]</code> - Shows customer details (name and email)</li>
+                    <li><code>[custom_thank_you_customer_first_name]</code> - Shows customer's first name</li>
+                    <li><code>[custom_thank_you_customer_last_name]</code> - Shows customer's last name</li>
+                    <li><code>[custom_thank_you_customer_email]</code> - Shows customer's email</li>
                     <li><code>[custom_thank_you_order_details]</code> - Lists ordered products and quantities</li>
                 </ul>
             </div>
@@ -171,69 +175,103 @@ class Custom_Thank_You_Pages {
         <?php
     }
 
-    public function ctp_custom_thank_you_redirect( $order_id ) {
-        if ( ! $order_id ) return;
 
-        $order = wc_get_order( $order_id );
-        $rules = get_option( 'ctp_rules', array() );
-
-        usort( $rules, function( $a, $b ) {
-            return $b['priority'] - $a['priority'];
-        });
-
-        foreach ( $rules as $rule ) {
-            $product_id_match = empty( $rule['product_id'] ) || array_reduce( $order->get_items(), function( $carry, $item ) use ( $rule ) {
-                return $carry || ( $item->get_product_id() == $rule['product_id'] );
-            }, false );
-
-            $gateway_match = empty( $rule['payment_gateway'] ) || $order->get_payment_method() == $rule['payment_gateway'];
-
-            if ( $product_id_match && $gateway_match ) {
-                wp_redirect( esc_url( $rule['thank_you_url'] ) );
-                exit;
-            }
-        }
-    }
     // Shortcode for order ID
     public function ctp_shortcode_order( $atts ) {
-        global $wp;
-        $order_id = isset($wp->query_vars['order-received']) ? $wp->query_vars['order-received'] : '';
-        return $order_id ? 'Order ID: ' . esc_html( $order_id ) : '';
+        // Get order ID from session or URL
+        $order_id = WC()->session->get('last_order_id');
+        
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = wc_clean($_GET['order']);
+        }
+        
+        return esc_html($order_id);
     }
 
-    // Shortcode for customer information
-    public function ctp_shortcode_customer_information( $atts ) {
-        global $wp;
-        $order_id = isset($wp->query_vars['order-received']) ? $wp->query_vars['order-received'] : '';
-        if ( ! $order_id ) return '';
-
-        $order = wc_get_order( $order_id );
+    public function ctp_shortcode_customer_first_name($atts) {
+        $order_id = WC()->session->get('last_order_id');
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = wc_clean($_GET['order']);
+        }
+        if (!$order_id) return '';
+        $order = wc_get_order($order_id);
         if (!$order) return '';
+        return esc_html($order->get_billing_first_name());
+    }
 
-        $customer_info = 'Name: ' . esc_html( $order->get_billing_first_name() ) . ' ' . esc_html( $order->get_billing_last_name() ) . '<br>';
-        $customer_info .= 'Email: ' . esc_html( $order->get_billing_email() );
+    public function ctp_shortcode_customer_last_name($atts) {
+        $order_id = WC()->session->get('last_order_id');
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = wc_clean($_GET['order']);
+        }
+        if (!$order_id) return '';
+        $order = wc_get_order($order_id);
+        if (!$order) return '';
+        return esc_html($order->get_billing_last_name());
+    }
 
-        return $customer_info;
+    public function ctp_shortcode_customer_email($atts) {
+        $order_id = WC()->session->get('last_order_id');
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = wc_clean($_GET['order']);
+        }
+        if (!$order_id) return '';
+        $order = wc_get_order($order_id);
+        if (!$order) return '';
+        return esc_html($order->get_billing_email());
     }
 
     // Shortcode for order details
     public function ctp_shortcode_order_details( $atts ) {
-        global $wp;
-        $order_id = isset($wp->query_vars['order-received']) ? $wp->query_vars['order-received'] : '';
-        if ( ! $order_id ) return '';
+        $order_id = WC()->session->get('last_order_id');
+        
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = wc_clean($_GET['order']);
+        }
+        
+        if (!$order_id) return '';
 
-        $order = wc_get_order( $order_id );
+        $order = wc_get_order($order_id);
         if (!$order) return '';
 
         $items = $order->get_items();
         $details = '<ul>';
-        foreach ( $items as $item ) {
-            $details .= '<li>' . esc_html( $item->get_name() ) . ' x ' . $item->get_quantity() . '</li>';
+        foreach ($items as $item) {
+            $details .= '<li>' . esc_html($item->get_name()) . ' x ' . $item->get_quantity() . '</li>';
         }
         $details .= '</ul>';
 
         return $details;
     }
+
+    // Modify your redirect function to include order info
+    public function ctp_custom_thank_you_redirect( $order_id ) {
+        if ( ! $order_id ) return;
+    
+        $order = wc_get_order( $order_id );
+        $rules = get_option( 'ctp_rules', array() );
+    
+        // Store order ID in session
+        WC()->session->set('last_order_id', $order_id);
+    
+        usort( $rules, function( $a, $b ) {
+            return $b['priority'] - $a['priority'];
+        });
+    
+        foreach ( $rules as $rule ) {
+            $product_id_match = empty( $rule['product_id'] ) || array_reduce( $order->get_items(), function( $carry, $item ) use ( $rule ) {
+                return $carry || ( $item->get_product_id() == $rule['product_id'] );
+            }, false );
+    
+            $gateway_match = empty( $rule['payment_gateway'] ) || $order->get_payment_method() == $rule['payment_gateway'];
+    
+            if ( $product_id_match && $gateway_match ) {
+                wp_redirect( add_query_arg('order', $order_id, esc_url($rule['thank_you_url'])) );
+                exit;
+            }
+        }
+    }
+    
 }
 
 new Custom_Thank_You_Pages();
