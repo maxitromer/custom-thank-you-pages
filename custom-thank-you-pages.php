@@ -201,10 +201,18 @@ class Custom_Thank_You_Pages {
         </script>
         <?php
     }
-
     // Shortcode for order ID
     public function ctp_shortcode_order($atts) {
-        $order_id = WC()->session->get('last_order_id');
+        if (!function_exists('WC')) {
+            return '';
+        }
+        
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return '';
+        }
+        
+        $order_id = $wc->session->get('last_order_id');
         if (!$order_id && isset($_GET['order'])) {
             $order_id = absint($_GET['order']);
         }
@@ -212,7 +220,16 @@ class Custom_Thank_You_Pages {
     }
 
     public function ctp_shortcode_customer_first_name($atts) {
-        $order_id = WC()->session->get('last_order_id');
+        if (!function_exists('WC')) {
+            return '';
+        }
+        
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return '';
+        }
+        
+        $order_id = $wc->session->get('last_order_id');
         if (!$order_id && isset($_GET['order'])) {
             $order_id = absint($_GET['order']);
         }
@@ -225,7 +242,16 @@ class Custom_Thank_You_Pages {
     }
 
     public function ctp_shortcode_customer_last_name($atts) {
-        $order_id = WC()->session->get('last_order_id');
+        if (!function_exists('WC')) {
+            return '';
+        }
+        
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return '';
+        }
+        
+        $order_id = $wc->session->get('last_order_id');
         if (!$order_id && isset($_GET['order'])) {
             $order_id = absint($_GET['order']);
         }
@@ -238,7 +264,16 @@ class Custom_Thank_You_Pages {
     }
 
     public function ctp_shortcode_customer_email($atts) {
-        $order_id = WC()->session->get('last_order_id');
+        if (!function_exists('WC')) {
+            return '';
+        }
+        
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return '';
+        }
+        
+        $order_id = $wc->session->get('last_order_id');
         if (!$order_id && isset($_GET['order'])) {
             $order_id = absint($_GET['order']);
         }
@@ -252,7 +287,16 @@ class Custom_Thank_You_Pages {
 
     // Shortcode for order details
     public function ctp_shortcode_order_details($atts) {
-        $order_id = WC()->session->get('last_order_id');
+        if (!function_exists('WC')) {
+            return '';
+        }
+        
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return '';
+        }
+        
+        $order_id = $wc->session->get('last_order_id');
         if (!$order_id && isset($_GET['order'])) {
             $order_id = absint($_GET['order']);
         }
@@ -270,6 +314,7 @@ class Custom_Thank_You_Pages {
         
         return $details;
     }
+    
     // Modify your redirect function to include order info
     public function ctp_custom_thank_you_redirect( $order_id ) {
         if ( ! $order_id ) return;
