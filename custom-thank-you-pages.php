@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 0.1.4
+Version: 0.1.5
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
@@ -57,10 +57,24 @@ class Custom_Thank_You_Pages {
 
     public function ctp_settings_page() {
         $rules = get_option('ctp_rules', array());
-        $products = wc_get_products(array('limit' => -1));
-        $pages = get_pages();
-        $payment_gateways = WC()->payment_gateways->payment_gateways();
-        ?>
+            $products = wc_get_products(array('limit' => -1));
+            $pages = get_pages();
+            $payment_gateways = WC()->payment_gateways->payment_gateways();
+
+            // Sort products alphabetically
+            usort($products, function($a, $b) {
+                return strcmp($a->get_name(), $b->get_name());
+            });
+
+            // Sort payment gateways alphabetically
+            uasort($payment_gateways, function($a, $b) {
+                return strcmp($a->get_title(), $b->get_title());
+            });
+
+            // Sort pages alphabetically
+            usort($pages, function($a, $b) {
+                return strcmp($a->post_title, $b->post_title);
+            });        ?>
         <div class="wrap">
             <h1>Custom Thank You Pages Settings</h1>
             <div class="shortcodes-reference" style="background: #fff; padding: 15px; margin: 20px 0; border: 1px solid #ccd0d4;">
@@ -129,15 +143,24 @@ class Custom_Thank_You_Pages {
                 <?php submit_button(); ?>
             </form>
         </div>
-
         <script type="text/javascript">
             document.getElementById('add-rule').addEventListener('click', function() {
                 var table = document.getElementById('ctp-rules-table');
-                var index = table.rows.length - 1;
+                // Calculate the highest existing index and add 1
+                var highestIndex = -1;
+                var inputs = table.querySelectorAll('input[name^="ctp_rules["]');
+                inputs.forEach(function(input) {
+                    var match = input.name.match(/\[(\d+)\]/);
+                    if (match) {
+                        highestIndex = Math.max(highestIndex, parseInt(match[1]));
+                    }
+                });
+                var newIndex = highestIndex + 1;
+                
                 var row = document.createElement('tr');
                 row.innerHTML = `
                     <td>
-                        <select name="ctp_rules[${index}][product_id]">
+                        <select name="ctp_rules[${newIndex}][product_id]">
                             <option value="">Any Product</option>
                             <?php foreach ( $products as $product ) : ?>
                                 <option value="<?php echo $product->get_id(); ?>"><?php echo esc_html( $product->get_name() . ' (#' . $product->get_id() . ')' ); ?></option>
@@ -145,7 +168,7 @@ class Custom_Thank_You_Pages {
                         </select>
                     </td>
                     <td>
-                        <select name="ctp_rules[${index}][payment_gateway]">
+                        <select name="ctp_rules[${newIndex}][payment_gateway]">
                             <option value="">Any Gateway</option>
                             <?php foreach ( $payment_gateways as $gateway_id => $gateway ) : ?>
                                 <option value="<?php echo esc_attr( $gateway_id ); ?>"><?php echo esc_html( $gateway->get_title() ); ?></option>
@@ -153,14 +176,14 @@ class Custom_Thank_You_Pages {
                         </select>
                     </td>
                     <td>
-                        <select name="ctp_rules[${index}][thank_you_url]">
+                        <select name="ctp_rules[${newIndex}][thank_you_url]">
                             <option value="">Select a Page</option>
                             <?php foreach ( $pages as $page ) : ?>
                                 <option value="<?php echo get_permalink($page->ID); ?>"><?php echo esc_html( $page->post_title . ' (#' . $page->ID . ')' ); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </td>
-                    <td><input type="number" name="ctp_rules[${index}][priority]" /></td>
+                    <td><input type="number" name="ctp_rules[${newIndex}][priority]" /></td>
                     <td><button type="button" class="button remove-row">Remove</button></td>
                 `;
                 table.appendChild(row);
