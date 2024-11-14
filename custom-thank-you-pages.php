@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 0.1.5
+Version: 0.1.6
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
@@ -57,24 +57,26 @@ class Custom_Thank_You_Pages {
 
     public function ctp_settings_page() {
         $rules = get_option('ctp_rules', array());
-            $products = wc_get_products(array('limit' => -1));
-            $pages = get_pages();
-            $payment_gateways = WC()->payment_gateways->payment_gateways();
+            // Get products with proper sorting
+            $products = wc_get_products(array(
+                'limit' => -1,
+                'orderby' => 'title',
+                'order' => 'ASC'
+            ));
 
-            // Sort products alphabetically
-            usort($products, function($a, $b) {
-                return strcmp($a->get_name(), $b->get_name());
-            });
+            // Get pages with proper sorting
+            $pages = get_pages(array(
+                'sort_column' => 'post_title',
+                'sort_order' => 'ASC'
+            ));
+
+            $payment_gateways = WC()->payment_gateways->payment_gateways();
 
             // Sort payment gateways alphabetically
             uasort($payment_gateways, function($a, $b) {
                 return strcmp($a->get_title(), $b->get_title());
             });
-
-            // Sort pages alphabetically
-            usort($pages, function($a, $b) {
-                return strcmp($a->post_title, $b->post_title);
-            });        ?>
+        ?>
         <div class="wrap">
             <h1>Custom Thank You Pages Settings</h1>
             <div class="shortcodes-reference" style="background: #fff; padding: 15px; margin: 20px 0; border: 1px solid #ccd0d4;">
@@ -146,16 +148,18 @@ class Custom_Thank_You_Pages {
         <script type="text/javascript">
             document.getElementById('add-rule').addEventListener('click', function() {
                 var table = document.getElementById('ctp-rules-table');
-                // Calculate the highest existing index and add 1
-                var highestIndex = -1;
-                var inputs = table.querySelectorAll('input[name^="ctp_rules["]');
-                inputs.forEach(function(input) {
-                    var match = input.name.match(/\[(\d+)\]/);
+                
+                // Get all existing rule indices
+                var indices = [];
+                table.querySelectorAll('[name^="ctp_rules["]').forEach(function(element) {
+                    var match = element.name.match(/\[(\d+)\]/);
                     if (match) {
-                        highestIndex = Math.max(highestIndex, parseInt(match[1]));
+                        indices.push(parseInt(match[1]));
                     }
                 });
-                var newIndex = highestIndex + 1;
+                
+                // Calculate next available index
+                var newIndex = indices.length > 0 ? Math.max(...indices) + 1 : 0;
                 
                 var row = document.createElement('tr');
                 row.innerHTML = `
@@ -183,7 +187,7 @@ class Custom_Thank_You_Pages {
                             <?php endforeach; ?>
                         </select>
                     </td>
-                    <td><input type="number" name="ctp_rules[${newIndex}][priority]" /></td>
+                    <td><input type="number" name="ctp_rules[${newIndex}][priority]" value="0" /></td>
                     <td><button type="button" class="button remove-row">Remove</button></td>
                 `;
                 table.appendChild(row);
