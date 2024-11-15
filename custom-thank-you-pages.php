@@ -33,7 +33,7 @@ class Custom_Thank_You_Pages {
         add_shortcode('custom_thank_you_customer_email', array($this, 'ctp_shortcode_customer_email'));
         add_shortcode('custom_thank_you_order_total', array($this, 'ctp_shortcode_order_total'));
         add_shortcode('custom_thank_you_order_table', array($this, 'ctp_shortcode_order_table'));
-
+        add_shortcode('custom_thank_you_order_metadata', array($this, 'ctp_shortcode_order_metadata'));
     }    
     
     public function ctp_add_menu_page() {
@@ -92,6 +92,7 @@ class Custom_Thank_You_Pages {
                     <li><code>[custom_thank_you_order_details]</code> - Lists ordered products and quantities</li>
                     <li><code>[custom_thank_you_order_total]</code> - Shows the total order amount</li>
                     <li><code>[custom_thank_you_order_table]</code> - Displays a detailed order table with products, quantities, prices and totals</li>
+                    <li><code>[custom_thank_you_order_metadata]</code> - Displays the metadata in the order, if it exists.</li>
                 </ul>
             </div>
             <h1>Rules</h1>
@@ -340,6 +341,44 @@ class Custom_Thank_You_Pages {
         if (!$order instanceof WC_Order) return '';
         
         return wc_price($order->get_total());
+    }
+
+    function ctp_shortcode_order_metadata() {
+        if (!function_exists('WC')) {
+            return 'WooCommerce is not available.';
+        }
+    
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return 'Session is not available.';
+        }
+    
+        $order_id = $wc->session->get('last_order_id');
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = absint($_GET['order']);
+        }
+        if (!$order_id) {
+            return 'Order ID is not available.';
+        }
+    
+        $order = wc_get_order($order_id);
+        if (!$order instanceof WC_Order) {
+            return 'Invalid order.';
+        }
+    
+        $metadata = $order->get_meta_data();
+        if (empty($metadata)) {
+            return 'No metadata found for this order.';
+        }
+    
+        // Prepare metadata output
+        $output = '<h3>Order Metadata:</h3><ul>';
+        foreach ($metadata as $meta) {
+            $output .= '<li><strong>' . esc_html($meta->key) . ':</strong> ' . esc_html(var_export($meta->value, true)) . '</li>';
+        }
+        $output .= '</ul>';
+    
+        return $output;
     }
 
     public function ctp_shortcode_order_table($atts) {
