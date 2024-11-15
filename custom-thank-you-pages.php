@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 0.1.12
+Version: 0.1.13
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
@@ -34,6 +34,7 @@ class Custom_Thank_You_Pages {
         add_shortcode('custom_thank_you_order_total', array($this, 'ctp_shortcode_order_total'));
         add_shortcode('custom_thank_you_order_table', array($this, 'ctp_shortcode_order_table'));
         add_shortcode('custom_thank_you_order_metadata', array($this, 'ctp_shortcode_order_metadata'));
+        add_shortcode('custom_thank_you_order_mercadopago_ticket_url', array($this, 'ctp_shortcode_mercadopago_ticket_url'));
     }    
     
     public function ctp_add_menu_page() {
@@ -93,6 +94,7 @@ class Custom_Thank_You_Pages {
                     <li><code>[custom_thank_you_order_total]</code> - Shows the total order amount</li>
                     <li><code>[custom_thank_you_order_table]</code> - Displays a detailed order table with products, quantities, prices and totals</li>
                     <li><code>[custom_thank_you_order_metadata]</code> - Displays the metadata in the order, if it exists.</li>
+                    <li><code>[custom_thank_you_order_mercadopago_ticket_url]</code> - Displays the Mercadopago Ticket URL.</li>
                 </ul>
             </div>
             <h1>Rules</h1>
@@ -379,6 +381,39 @@ class Custom_Thank_You_Pages {
         $output .= '</ul>';
     
         return $output;
+    }
+
+    function ctp_shortcode_mercadopago_ticket_url() {
+        if (!function_exists('WC')) {
+            return 'WooCommerce is not available.';
+        }
+    
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return 'Session is not available.';
+        }
+    
+        $order_id = $wc->session->get('last_order_id');
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = absint($_GET['order']);
+        }
+        if (!$order_id) {
+            return 'Order ID is not available.';
+        }
+    
+        $order = wc_get_order($order_id);
+        if (!$order instanceof WC_Order) {
+            return 'Invalid order.';
+        }
+    
+        // Retrieve the ticket URL from the order metadata
+        $ticket_url = $order->get_meta('_transaction_details_ticket');
+        if (!$ticket_url) {
+            return 'Ticket URL not found.';
+        }
+    
+        // Display the ticket URL
+        return esc_url($ticket_url);
     }
 
     public function ctp_shortcode_order_table($atts) {
