@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 0.1.9
+Version: 0.1.10
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
@@ -31,6 +31,7 @@ class Custom_Thank_You_Pages {
         add_shortcode('custom_thank_you_customer_first_name', array($this, 'ctp_shortcode_customer_first_name'));
         add_shortcode('custom_thank_you_customer_last_name', array($this, 'ctp_shortcode_customer_last_name'));
         add_shortcode('custom_thank_you_customer_email', array($this, 'ctp_shortcode_customer_email'));
+        add_shortcode('custom_thank_you_order_total', array($this, 'ctp_shortcode_order_total'));
 
     }    
     
@@ -88,6 +89,7 @@ class Custom_Thank_You_Pages {
                     <li><code>[custom_thank_you_customer_last_name]</code> - Shows customer's last name</li>
                     <li><code>[custom_thank_you_customer_email]</code> - Shows customer's email</li>
                     <li><code>[custom_thank_you_order_details]</code> - Lists ordered products and quantities</li>
+                    <li><code>[custom_thank_you_order_total]</code> - Shows the total order amount</li>
                 </ul>
             </div>
             <h1>Rules</h1>
@@ -98,7 +100,7 @@ class Custom_Thank_You_Pages {
                     <tr>
                         <th>Product</th>
                         <th>Payment Gateway</th>
-                        <th>Thank You Page URL</th>
+                        <th>Thank You Page</th>
                         <th>Priority</th>
                         <th>Actions</th>
                     </tr>
@@ -314,6 +316,28 @@ class Custom_Thank_You_Pages {
         // $details .= '</ul>';
         
         return $details;
+    }
+
+    public function ctp_shortcode_order_total($atts) {
+        if (!function_exists('WC')) {
+            return '';
+        }
+        
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return '';
+        }
+        
+        $order_id = $wc->session->get('last_order_id');
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = absint($_GET['order']);
+        }
+        if (!$order_id) return '';
+        
+        $order = wc_get_order($order_id);
+        if (!$order instanceof WC_Order) return '';
+        
+        return wc_price($order->get_total());
     }
     
     // Modify your redirect function to include order info
