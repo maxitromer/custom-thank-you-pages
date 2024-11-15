@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 0.1.8
+Version: 0.1.9
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
@@ -306,7 +306,7 @@ class Custom_Thank_You_Pages {
         if (!$order instanceof WC_Order) return '';
         
         $items = $order->get_items();
-        // $details = '<ul>';
+        $details = '';
         foreach ($items as $item) {
             // $details .= '<li>' . esc_html($item->get_name()) . ' x ' . $item->get_quantity() . '</li>';
             $details .= '- ' . esc_html($item->get_name()) . '<br>';
