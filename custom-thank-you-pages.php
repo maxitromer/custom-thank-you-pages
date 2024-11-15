@@ -3,7 +3,7 @@
 Plugin Name: Custom Thank You Pages
 Plugin URI: https://github.com/maxitromer/custom-thank-you-pages
 Description: Set custom thank-you pages based on products or payment gateway rules with priority.
-Version: 0.1.10
+Version: 0.1.11
 Author: Maxi Tromer
 Author URI: https://github.com/maxitromer
 Developer: Maxi Tromer
@@ -32,6 +32,7 @@ class Custom_Thank_You_Pages {
         add_shortcode('custom_thank_you_customer_last_name', array($this, 'ctp_shortcode_customer_last_name'));
         add_shortcode('custom_thank_you_customer_email', array($this, 'ctp_shortcode_customer_email'));
         add_shortcode('custom_thank_you_order_total', array($this, 'ctp_shortcode_order_total'));
+        add_shortcode('custom_thank_you_order_table', array($this, 'ctp_shortcode_order_table'));
 
     }    
     
@@ -90,6 +91,7 @@ class Custom_Thank_You_Pages {
                     <li><code>[custom_thank_you_customer_email]</code> - Shows customer's email</li>
                     <li><code>[custom_thank_you_order_details]</code> - Lists ordered products and quantities</li>
                     <li><code>[custom_thank_you_order_total]</code> - Shows the total order amount</li>
+                    <li><code>[custom_thank_you_order_table]</code> - Displays a detailed order table with products, quantities, prices and totals</li>
                 </ul>
             </div>
             <h1>Rules</h1>
@@ -339,7 +341,81 @@ class Custom_Thank_You_Pages {
         
         return wc_price($order->get_total());
     }
-    
+
+    public function ctp_shortcode_order_table($atts) {
+        if (!function_exists('WC')) {
+            return '';
+        }
+        
+        $wc = WC();
+        if (!isset($wc->session)) {
+            return '';
+        }
+        
+        $order_id = $wc->session->get('last_order_id');
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = absint($_GET['order']);
+        }
+        if (!$order_id) return '';
+        
+        $order = wc_get_order($order_id);
+        if (!$order instanceof WC_Order) return '';
+        
+        $output = '<table class="custom-thank-you-order-table" style="width: 100%; border-collapse: collapse; margin: 20px 0;">';
+        
+        // Header
+        $output .= '<thead><tr style="background-color: #f8f8f8;">
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Product</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">Quantity</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Price</th>
+            <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Subtotal</th>
+        </tr></thead>';
+        
+        // Items
+        $output .= '<tbody>';
+        foreach ($order->get_items() as $item) {
+            $output .= '<tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">' . esc_html($item->get_name()) . '</td>
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">' . esc_html($item->get_quantity()) . '</td>
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">' . wc_price($item->get_subtotal() / $item->get_quantity()) . '</td>
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">' . wc_price($item->get_subtotal()) . '</td>
+            </tr>';
+        }
+        $output .= '</tbody>';
+        
+        // Footer with totals
+        $output .= '<tfoot>
+            <tr>
+                <td colspan="3" style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>Subtotal:</strong></td>
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">' . wc_price($order->get_subtotal()) . '</td>
+            </tr>';
+        
+        if ($order->get_shipping_total() > 0) {
+            $output .= '<tr>
+                <td colspan="3" style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>Shipping:</strong></td>
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">' . wc_price($order->get_shipping_total()) . '</td>
+            </tr>';
+        }
+        
+        if ($order->get_total_tax() > 0) {
+            $output .= '<tr>
+                <td colspan="3" style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>Tax:</strong></td>
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">' . wc_price($order->get_total_tax()) . '</td>
+            </tr>';
+        }
+        
+        $output .= '<tr>
+                <td colspan="3" style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>Total:</strong></td>
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>' . wc_price($order->get_total()) . '</strong></td>
+            </tr>
+        </tfoot>';
+        
+        $output .= '</table>';
+        
+        return $output;
+    }
+        
+
     // Modify your redirect function to include order info
     public function ctp_custom_thank_you_redirect( $order_id ) {
         if ( ! $order_id ) return;
